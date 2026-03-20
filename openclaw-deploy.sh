@@ -116,7 +116,7 @@ cat > "${DATA_DIR}/openclaw.json" << EOF
       "accounts": {
         "default": {
           "botToken": "${TELEGRAM_BOT_TOKEN}",
-          "allowFrom": [${OWNER_TELEGRAM_ID}],
+          "allowFrom": ["*"],
           "dmPolicy": "open",
           "groupPolicy": "open"
         }
