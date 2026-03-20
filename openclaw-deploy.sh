@@ -112,6 +112,7 @@ cat > "${DATA_DIR}/openclaw.json" << EOF
     "telegram": {
       "enabled": true,
       "dmPolicy": "open",
+      "allowFrom": ["*"],
       "streaming": "partial",
       "accounts": {
         "default": {
