@@ -3,10 +3,18 @@
 # Развёртывание OpenClaw на сервере с Docker
 #
 # Использование:
-#   curl -fsSL https://raw.githubusercontent.com/gorcer/openclaw-deploy/main/openclaw-deploy.sh | bash -s <TELEGRAM_BOT_TOKEN> <MINIMAX_API_KEY> <OWNER_TELEGRAM_ID>
+#   ./openclaw-deploy.sh
 #
-# Или скачать и запустить локально:
-#   ./openclaw-deploy.sh <TELEGRAM_BOT_TOKEN> <MINIMAX_API_KEY> <OWNER_TELEGRAM_ID> [YANDEX_API_KEY] [YANDEX_FOLDER_ID]
+# Данные берутся из .env файла в текущей директории
+#
+# Пример .env:
+#   TELEGRAM_BOT_TOKEN=123456:ABC-DEF
+#   MINIMAX_API_KEY=your_api_key
+#   OWNER_TELEGRAM_ID=141455495
+#   YANDEX_API_KEY=your_yandex_key
+#   YANDEX_FOLDER_ID=your_folder_id
+#   OPENCLAW_VERSION=latest
+#   DATA_DIR=/opt/openclaw/data
 
 set -e
 
@@ -21,17 +29,28 @@ log() { echo -e "${GREEN}[INFO]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
-# ─── Аргументы ───
-TELEGRAM_BOT_TOKEN="${1?Укажи TELEGRAM_BOT_TOKEN}"
-MINIMAX_API_KEY="${2?Укажи MINIMAX_API_KEY}"
-OWNER_TELEGRAM_ID="${3?Укажи OWNER_TELEGRAM_ID (telegram user id)}"
-YANDEX_API_KEY="${4:-""}"
-YANDEX_FOLDER_ID="${5:-""}"
+# ─── Загрузка .env ───
+if [ -f ".env" ]; then
+    log "Загружаю .env..."
+    set -a
+    source .env
+    set +a
+else
+    error ".env файл не найден в текущей директории"
+    exit 1
+fi
+
+# ─── Проверка обязательных переменных ───
+: "${TELEGRAM_BOT_TOKEN?Не указано TELEGRAM_BOT_TOKEN в .env}"
+: "${MINIMAX_API_KEY?Не указано MINIMAX_API_KEY в .env}"
+: "${OWNER_TELEGRAM_ID?Не указано OWNER_TELEGRAM_ID в .env}"
 
 # ─── Конфигурация ───
 CONTAINER_NAME="openclaw-server"
 OPENCLAW_VERSION="${OPENCLAW_VERSION:-latest}"
-DATA_DIR="/opt/openclaw/data"
+DATA_DIR="${DATA_DIR:-/opt/openclaw/data}"
+CLIENT_DATA_DIR="${CLIENT_DATA_DIR:-/opt/openclaw/client_data}"
+CLIENT_VOLUME_SIZE="${CLIENT_VOLUME_SIZE:-100G}"
 PORT="${PORT:-18789}"
 
 # ─── Проверки ───
@@ -53,6 +72,7 @@ log "Создаю директории..."
 mkdir -p "${DATA_DIR}/workspace"
 mkdir -p "${DATA_DIR}/logs"
 mkdir -p "${DATA_DIR}/agents/main/agent"
+mkdir -p "${CLIENT_DATA_DIR}/workspace"
 
 # ─── Генерация конфига ───
 log "Генерирую конфиг..."
@@ -226,6 +246,7 @@ services:
       - ./workspace:/home/node/.openclaw/workspace
       - ./agents:/home/node/.openclaw/agents
       - ./logs:/home/node/.openclaw/logs
+      - ${CLIENT_DATA_DIR}:/home/node/.openclaw/client_workspace:ro
     environment:
       - NODE_ENV=production
     mem_limit: 1g
@@ -234,14 +255,13 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # Внешний порт НЕ маппим — gateway слушает только loopback
 
   # Опционально: прокси для Telegram (если сервер в РФ)
   # xray:
   #   image: teddysun/xray:latest
   #   container_name: openclaw-proxy
   #   restart: unless-stopped
-  #   ports:
-  #     - "10808:10808"
   #   volumes:
   #     - ./xray.config.json:/etc/xray/config.json:ro
   #   environment:
@@ -265,7 +285,7 @@ if docker ps | grep -q "${CONTAINER_NAME}"; then
     
     echo ""
     echo -e "${GREEN}=== Развёртывание завершено ===${NC}"
-    echo -e "${BLUE}Gateway:${NC} http://localhost:${PORT}"
+    echo -e "${BLUE}Gateway:${NC} http://localhost:${PORT} (доступен только локально)"
     echo -e "${BLUE}Логи:${NC} docker logs ${CONTAINER_NAME}"
     echo ""
     echo "Следующий шаг:"
