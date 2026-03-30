@@ -1,0 +1,18 @@
+[Unit]
+Description=Yandex Proxy - скрывает API ключи от агентов
+After=network.target
+
+[Service]
+Type=simple
+User=gorcer
+WorkingDirectory=/home/gorcer/.openclaw/workspace/scripts
+ExecStart=/usr/bin/python3 /home/gorcer/.openclaw/workspace/scripts/yandex_proxy.py
+Restart=always
+RestartSec=5
+
+# Можно добавить переменные окружения для ключей (безопаснее)
+Environment=YANDEX_API_KEY=YANDEX_API_KEY_PLACEHOLDER
+Environment=YANDEX_FOLDER_ID=YANDEX_FOLDER_ID_PLACEHOLDER
+
+[Install]
+WantedBy=multi-user.target

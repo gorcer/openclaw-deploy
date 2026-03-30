@@ -1,0 +1,25 @@
+# Private data
+MEMORY.md
+memory/
+
+# Secrets
+.env
+*.env
+*.key
+credentials*
+*creds*
+*secret*
+.yandex-creds
+
+# Logs
+logs/
+*.log
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db

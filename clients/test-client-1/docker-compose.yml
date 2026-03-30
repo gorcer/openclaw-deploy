@@ -1,0 +1,18 @@
+services:
+  openclaw:
+    image: alpine/openclaw
+    container_name: openclaw-client-test-client-1
+    network_mode: "host"
+    environment:
+      - TELEGRAM_BOT_TOKEN=5489963714:AAFTaTdRS6lgykShJfM8tFLM04A4rR9qCCY
+      - MINIMAX_API_KEY=sk-api-SS1eiIx5PfU3DWi20eNUG8ygoms78yAZ1wINW18CsP7p6QW0-WG5MxrNl7wuD3LUnM7MYWqlbTv4yHNWJMInnKmX_MBp-NQpoki_eWk8pKuroNozd5mrhgo
+      - YANDEX_API_KEY=YANDEX_API_KEY_PLACEHOLDER
+      - YANDEX_FOLDER_ID=YANDEX_FOLDER_ID_PLACEHOLDER
+      - HTTP_PROXY=http://127.0.0.1:10809
+      - HTTPS_PROXY=http://127.0.0.1:10809
+      - SOCKS_PROXY=socks5://127.0.0.1:10808
+      - OPENCLAW_GATEWAY_PORT=18795
+    volumes:
+      - ./workspace:/app/openclaw/workspace
+      - ./logs:/app/openclaw/logs
+    restart: unless-stopped
